@@ -1,0 +1,405 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+export type Lang = "ar" | "en";
+
+type Dict = Record<string, string>;
+
+const ar: Dict = {
+  navPackages: "الباقات",
+  navCrm: "CRM",
+  navErp: "ERP",
+  navCompare: "مقارنة",
+  navTerms: "الشروط",
+  navCta: "اختر الباقة",
+  brandSub: "رووتك سيستمز",
+  commercialQuotation: "عرض تجاري",
+  presentedTo: "مقدَّم إلى",
+  heroEyebrow: "عرض فني وتجاري · أكتوبر 2026",
+  heroTitle: "عرض فني وتجاري لتطوير الأنظمة الإدارية المخصصة",
+  heroSubtitle: "Custom Business Management Solutions",
+  heroLede:
+    "تقدم ROOTK Systems حلولاً برمجية مخصصة يتم تصميمها وتطويرها وفقاً لطبيعة العمل والإجراءات التشغيلية ومتطلبات كل شركة، بما يضمن توافق النظام مع دورة العمل الفعلية، مع قابلية التوسع والتطوير وفقاً لاحتياجات الأعمال المستقبلية.",
+  offerAShort: "نظام إدارة علاقات العملاء والصفقات",
+  offerBShort: "نظام تخطيط وإدارة موارد المؤسسة",
+  offerCShort: "متكامل ERP + تطبيق موبايل بهوية SAFQA",
+  preparedBy: "مقدَّم من",
+  client: "العميل",
+  currency: "العملة",
+  validity: "الصلاحية",
+  validityValue: "14 يوماً",
+  introEyebrow: "مقدمة · تصميم مخصص",
+  introTitle: "مصمم خصيصاً لطريقة عملكم",
+  introLede:
+    "تقدّم ROOTK Systems حلولاً برمجية مخصّصة لمنصة صفقة حول إجراءات العمل التشغيلية ونموذج إدارة المستثمرين والصفقات — وليس كنظام جاهز عام. يُضبط النظام لمراحل الصفقة وهيكل الموافقات والتقارير ضمن النطاق المعتمد؛ وأي متطلبات إضافية تُسعَّر منفصلاً.",
+  point1Title: "مسارات قابلة للتخصيص",
+  point1Text: "ضبط مراحل العملاء والصفقات وفق سير عمل SAFQA.",
+  point2Title: "أدوار وصلاحيات مرنة",
+  point2Text: "تهيئة الصلاحيات حسب الفرق والمشرفين.",
+  point3Title: "لوحات وتقارير مخصّصة",
+  point3Text: "مؤشرات تعكس أولويات المتابعة لديكم.",
+  point4Title: "تكامل وقابلية توسع",
+  point4Text: "ربط الوحدات ذات الصلة مع أساس قابل للنمو.",
+  packagesHeading: "ثلاث باقات تجارية مستقلة — كل باقة بسعر ونطاق منفصل",
+  packageTotal: "إجمالي الباقة",
+  egp: "جنيه مصري",
+  free01: "صيانة سنة كاملة",
+  free01Text: "دون رسوم صيانة إضافية، وفق النطاق المعتمد في العقد النهائي.",
+  free02: "موقع شركة مجاني",
+  free02Text: "موقع تعريفي متفق الصفحات — منفصل عن منصة صفقة الحالية.",
+  free03: "فترة تدريب مجانية",
+  free03Text: "تدريب المستخدمين المعتمدين؛ المدة تُحدد أثناء التخطيط.",
+  commercialNote:
+    "ملاحظة تجارية: العروض الثلاثة بدائل مستقلة. الـ CRM لا يشمل المحاسبة أو الموارد البشرية أو القانوني الكاملة. الـ ERP لا يشمل الموبايل إلا في Offer C. صلاحية العرض 14 يوماً من تاريخ الإصدار.",
+  crmTitle: "نظام إدارة علاقات العملاء والصفقات (CRM)",
+  crmLede: "ملخص الوحدات المعتمدة — دون إعادة بناء المنصة أو تطبيقات موبايل مستقلة.",
+  crmPriceLabel: "السعر الإجمالي الثابت لعرض الـ CRM",
+  crmExclusion:
+    "خارج نطاق عرض الـ CRM: لا يشمل إعادة بناء منصة صفقة الحالية، ولا تطبيقات موبايل مستقلة، ولا وحدات المحاسبة/الموارد البشرية/القانوني الكاملة الخاصة بعرض الـ ERP.",
+  erpTitle: "نظام تخطيط وإدارة موارد المؤسسة المتكامل (ERP)",
+  erpLede: "بديل مستقل عن عرض الـ CRM وفق الملحق الفني المعتمد.",
+  erpPriceLabel: "السعر الإجمالي الثابت لعرض الـ ERP",
+  offerCTitle: "متكامل ERP + تطبيق موبايل بهوية SAFQA",
+  offerCText:
+    "باقة إجمالية تشمل نطاق الـ ERP أعلاه + تطبيق Android و iOS بهوية SAFQA والشاشات والإشعارات المتفق عليها. الشاشات النهائية تُعتمد أثناء اعتماد المتطلبات. رسوم المتاجر والخدمات الخارجية وSMS غير مشمولة ما لم يُتفق عليها. النشر على Google Play و App Store يخضع لمتطلبات كل متجر.",
+  totalPackage: "إجمالي الباقة",
+  compareTitle: "مقارنة الباقات الثلاث",
+  feature: "الميزة",
+  basePrice: "السعر الأساسي",
+  included: "مشمول",
+  notIncluded: "غير مشمول",
+  sourceTitle: "خيار تسليم السورس كود · 50%",
+  sourceNote: "خيار اختياري غير مشمول تلقائياً. نطاق التسليم والترخيص في العقد النهائي.",
+  packageCol: "الباقة",
+  baseCol: "أساسي",
+  sourceCol: "سورس",
+  totalCol: "الإجمالي",
+  complimentary: "مجاني",
+  gift1Title: "صيانة مجانية لسنة",
+  gift1Text: "دون رسوم صيانة إضافية. النطاق والاستجابة في العقد النهائي — بلا ميزات جديدة غير محدودة.",
+  gift2Title: "موقع شركة مجاني",
+  gift2Text: "موقع تعريفي متفق الصفحات — منفصل عن منصة صفقة وعن تكامل نماذج الـ CRM.",
+  gift3Title: "فترة تدريب مجانية",
+  gift3Text: "تدريب المستخدمين المعتمدين؛ المدة تُتفق أثناء التخطيط.",
+  termsTitle: "الحدود التجارية ونطاق العرض",
+  term1: "الأسعار بالجنيه المصري (EGP). لكل باقة نطاق وسعر مستقلان.",
+  term2: "الـ CRM لا يشمل المحاسبة/HR/القانوني الكاملة. الـ ERP لا يشمل الموبايل إلا في Offer C.",
+  term3: "إعادة بناء منصة صفقة والتكاملات الخارجية ورسوم المتاجر غير مشمولة ما لم يُتفق صراحةً.",
+  term4: "الاستضافة وجدول الدفع والضرائب والضمان: يتم الاتفاق عليه في العقد النهائي",
+  term5: "أي ميزات خارج النطاق تُسعَّر منفصلاً. القبول وفق الملحق الفني والعقد.",
+  term6: "صلاحية العرض: 14 يوماً من تاريخ الإصدار. الجدول الزمني: يتم الاتفاق عليه في العقد النهائي",
+  termVat: "الأسعار المذكورة لا تشمل ضريبة القيمة المضافة (VAT)، وتُحسب إن وُجدت وفق الأنظمة المعمول بها.",
+  finalAgree: "يتم الاتفاق عليه في العقد النهائي",
+  closingTitle: "جاهزون لبناء نظام يطابق طريقة عمل صفقة",
+  closingText:
+    "ROOTK Systems — شريك تقني لتطوير حلول مخصّصة حول دورة عملكم، مع وضوح في النطاق والأسعار وحدود التسليم.",
+  footerBrand: "ROOTK Systems · منصة صفقة · عرض فني وتجاري",
+  switchTo: "English",
+  langAria: "تبديل اللغة",
+  compareBasicSource: "تتبع مصادر أساسي",
+  compareIntegrated: "وحدة متكاملة",
+  compareCrmOnly: "نطاق CRM فقط",
+  compareCrossDept: "عبر الأقسام",
+  compareRow1: "إدارة CRM والصفقات / المستثمرون",
+  compareRow2: "التسويق",
+  compareRow3: "محاسبة · موارد بشرية · قانوني",
+  compareRow4: "مستندات · مهام · لوحة تنفيذية",
+  compareRow5: "تطبيق Android / iOS بهوية SAFQA",
+  compareRow6: "صيانة سنة · موقع · تدريب",
+};
+
+const en: Dict = {
+  navPackages: "Packages",
+  navCrm: "CRM",
+  navErp: "ERP",
+  navCompare: "Compare",
+  navTerms: "Terms",
+  navCta: "Choose a package",
+  brandSub: "ROOTK Systems",
+  commercialQuotation: "Commercial Quotation",
+  presentedTo: "Presented to",
+  heroEyebrow: "Technical & Commercial Offer · October 2026",
+  heroTitle: "Technical & Commercial Quotation for Custom Business Management Systems",
+  heroSubtitle: "Custom Business Management Solutions",
+  heroLede:
+    "ROOTK Systems delivers custom software solutions designed around each company's operating model, workflows, and requirements — aligned with real business cycles and built to scale with future needs.",
+  offerAShort: "Customer & Deal Relationship Management",
+  offerBShort: "Enterprise Resource Planning System",
+  offerCShort: "Integrated ERP + SAFQA-branded mobile app",
+  preparedBy: "Prepared by",
+  client: "Client",
+  currency: "Currency",
+  validity: "Validity",
+  validityValue: "14 days",
+  introEyebrow: "Introduction · Custom Fit",
+  introTitle: "Designed around how you work",
+  introLede:
+    "ROOTK Systems builds tailored software for SAFQA around real operating procedures and investor/deal workflows — not a rigid off-the-shelf product. Customization stays within the approved scope; additional requirements are quoted separately.",
+  point1Title: "Configurable workflows",
+  point1Text: "Tune customer and deal stages to SAFQA's operating model.",
+  point2Title: "Flexible roles & permissions",
+  point2Text: "Configure access by teams and supervisors.",
+  point3Title: "Tailored dashboards & reports",
+  point3Text: "Indicators that match your follow-up priorities.",
+  point4Title: "Integration & scalability",
+  point4Text: "Connect related modules on a foundation ready to grow.",
+  packagesHeading: "Three independent commercial packages — each with its own scope and price",
+  packageTotal: "Package total",
+  egp: "EGP",
+  free01: "One year of maintenance",
+  free01Text: "No additional maintenance fee, within the scope defined in the final contract.",
+  free02: "Complimentary company website",
+  free02Text: "A professional website with agreed pages — separate from the current SAFQA platform.",
+  free03: "Complimentary training period",
+  free03Text: "Training for designated users; duration is set during project planning.",
+  commercialNote:
+    "Commercial note: The three offers are independent alternatives. CRM does not include full accounting, HR, or legal modules. ERP does not include mobile unless Offer C is selected. Offer validity is 14 days from the issue date.",
+  crmTitle: "Customer & Deal Relationship Management (CRM)",
+  crmLede: "Approved module summary — excluding rebuild of the existing platform or standalone mobile apps.",
+  crmPriceLabel: "Fixed total price for the CRM offer",
+  crmExclusion:
+    "Outside CRM scope: does not include rebuilding the current SAFQA platform, standalone mobile apps, or the full accounting/HR/legal modules of the ERP offer.",
+  erpTitle: "Integrated Enterprise Resource Planning (ERP)",
+  erpLede: "A complete independent alternative to the CRM offer, based on the approved technical annex.",
+  erpPriceLabel: "Fixed total price for the ERP offer",
+  offerCTitle: "Integrated ERP + SAFQA-branded mobile app",
+  offerCText:
+    "A total package including the ERP scope above plus Android and iOS apps with SAFQA branding and agreed screens/notifications. Final screens are confirmed during requirements approval. Store fees, third-party services, and SMS are excluded unless explicitly agreed. Google Play and App Store publishing remain subject to each store's requirements.",
+  totalPackage: "Total package",
+  compareTitle: "Side-by-side package comparison",
+  feature: "Feature",
+  basePrice: "Base price",
+  included: "Included",
+  notIncluded: "Not included",
+  sourceTitle: "Optional source-code delivery · 50%",
+  sourceNote: "Optional and not included by default. Delivery scope and licensing are defined in the final agreement.",
+  packageCol: "Package",
+  baseCol: "Base",
+  sourceCol: "Source",
+  totalCol: "Total",
+  complimentary: "Complimentary",
+  gift1Title: "One year free maintenance",
+  gift1Text: "No additional maintenance fee. Scope and response terms are set in the final contract — no unlimited new features.",
+  gift2Title: "Free company website",
+  gift2Text: "An agreed professional website — separate from SAFQA and from CRM form integration.",
+  gift3Title: "Complimentary training period",
+  gift3Text: "Training for designated users; duration is agreed during planning.",
+  termsTitle: "Commercial boundaries and scope",
+  term1: "Prices are in Egyptian pounds (EGP). Each package has its own independent scope and price.",
+  term2: "CRM does not include full accounting/HR/legal modules. ERP does not include mobile unless Offer C is selected.",
+  term3: "Rebuilding the SAFQA platform, external integrations, and store fees are excluded unless explicitly agreed.",
+  term4: "Hosting, payment schedule, taxes, and warranty: to be agreed in the final contract",
+  term5: "Any features outside the approved scope are assessed and quoted separately. Acceptance follows the technical annex and contract.",
+  term6: "Offer validity: 14 days from the issue date. Project timeline: to be agreed in the final contract",
+  termVat: "The stated prices do not include Value Added Tax (VAT); VAT, if applicable, will be calculated according to the prevailing regulations.",
+  finalAgree: "To be agreed in the final contract",
+  closingTitle: "Ready to build a system that matches how SAFQA works",
+  closingText:
+    "ROOTK Systems — a technical partner for tailored solutions around your operating cycle, with clear scope, pricing, and delivery boundaries.",
+  footerBrand: "ROOTK Systems · SAFQA Platform · Technical & Commercial Quotation",
+  switchTo: "عربي",
+  langAria: "Switch language",
+  compareBasicSource: "Basic source tracking",
+  compareIntegrated: "Integrated module",
+  compareCrmOnly: "CRM-related only",
+  compareCrossDept: "Cross-department",
+  compareRow1: "CRM & deal / investor management",
+  compareRow2: "Marketing",
+  compareRow3: "Accounting · HR · Legal",
+  compareRow4: "Documents · Tasks · Executive dashboard",
+  compareRow5: "SAFQA-branded Android / iOS app",
+  compareRow6: "1-year maintenance · Website · Training",
+};
+
+type LangContextValue = {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  toggleLang: () => void;
+  t: (key: string) => string;
+  dir: "rtl" | "ltr";
+};
+
+const LangContext = createContext<LangContextValue | null>(null);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("ar");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("safqa-quot-lang");
+    if (saved === "ar" || saved === "en") setLangState(saved);
+  }, []);
+
+  const setLang = useCallback((next: Lang) => {
+    setLangState(next);
+    window.localStorage.setItem("safqa-quot-lang", next);
+    document.documentElement.lang = next;
+    document.documentElement.dir = next === "ar" ? "rtl" : "ltr";
+  }, []);
+
+  const toggleLang = useCallback(() => {
+    setLang(lang === "ar" ? "en" : "ar");
+  }, [lang, setLang]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  }, [lang]);
+
+  const dict = lang === "ar" ? ar : en;
+  const t = useCallback((key: string) => dict[key] ?? key, [dict]);
+
+  const value = useMemo(
+    () => ({
+      lang,
+      setLang,
+      toggleLang,
+      t,
+      dir: (lang === "ar" ? "rtl" : "ltr") as "rtl" | "ltr",
+    }),
+    [lang, setLang, toggleLang, t],
+  );
+
+  return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
+}
+
+export function useLang() {
+  const ctx = useContext(LangContext);
+  if (!ctx) throw new Error("useLang must be used within LanguageProvider");
+  return ctx;
+}
+
+export const content = {
+  packages: {
+    ar: [
+      {
+        id: "A",
+        title: "نظام إدارة علاقات العملاء والصفقات (CRM)",
+        items: [
+          "إدارة العملاء والمستثمرين والصفقات",
+          "Pipeline ومتابعات فريق المبيعات",
+          "تكامل نماذج الموقع المتفق عليها",
+          "تقارير وإشعارات المبيعات",
+          "بدون محاسبة / موارد بشرية / موبايل",
+        ],
+      },
+      {
+        id: "B",
+        title: "نظام تخطيط وإدارة موارد المؤسسة (ERP)",
+        items: [
+          "CRM + تسويق + مالية + موارد بشرية",
+          "قانوني ومستندات ومهام وموافقات",
+          "لوحة تنفيذية متكاملة عبر الوحدات",
+          "بديل كامل ومستقل عن عرض الـ CRM",
+          "بدون تطبيق موبايل مستقل",
+        ],
+      },
+      {
+        id: "C",
+        title: "متكامل ERP + تطبيق موبايل بهوية SAFQA",
+        items: [
+          "نطاق الـ ERP بالكامل كما في Offer B",
+          "تطبيق Android و iOS بهوية SAFQA",
+          "إشعارات داخل التطبيق وPush المتفق عليها",
+          "السعر إجمالي للباقة — ليس إضافة فوق 140,000",
+          "الشاشات النهائية تُعتمد أثناء اعتماد المتطلبات",
+        ],
+      },
+    ],
+    en: [
+      {
+        id: "A",
+        title: "Customer & Deal Relationship Management (CRM)",
+        items: [
+          "Customers, investors, and deal management",
+          "Sales pipeline and team follow-ups",
+          "Agreed website form integration",
+          "Sales reports and notifications",
+          "Excludes accounting / HR / mobile",
+        ],
+      },
+      {
+        id: "B",
+        title: "Enterprise Resource Planning (ERP)",
+        items: [
+          "CRM + Marketing + Finance + HR",
+          "Legal, documents, tasks, and approvals",
+          "Cross-module executive dashboard",
+          "Complete independent alternative to CRM",
+          "Excludes standalone mobile app",
+        ],
+      },
+      {
+        id: "C",
+        title: "Integrated ERP + SAFQA-branded mobile app",
+        items: [
+          "Full ERP scope as in Offer B",
+          "Android and iOS app with SAFQA branding",
+          "In-app and agreed push notifications",
+          "Package total — not an add-on to 140,000",
+          "Final screens confirmed during requirements approval",
+        ],
+      },
+    ],
+  },
+  crmModules: {
+    ar: [
+      { code: "A", title: "إدارة العملاء المحتملين", en: "Lead Management", items: ["التقاط العملاء من نماذج الموقع المتفق عليها", "سجلات العملاء والمستثمرين وملّاك الأعمال", "تتبع المصادر والحملات والتصنيف والتعيين", "تمييز الجديد وغير المتواصل والمتابعة", "سجل النشاط وتقليل التكرار وفق قواعد متفق عليها"] },
+      { code: "B", title: "مسار المبيعات وإدارة الصفقات", en: "Sales Pipeline & Deal Management", items: ["تهيئة المسار وفق سير عمل SAFQA", "تتبع التأهيل والتواصل والتفاوض والإتمام والخسارة", "إدارة الفرص التجارية والاستثمارية وقيمها", "متابعة المفتوح والمتأخر والمكتمل والمفقود"] },
+      { code: "C", title: "المستثمرون والفرص", en: "Investor & Opportunity Management", items: ["ملفات المستثمرين وملّاك الأعمال", "تفضيلات الاستثمار ومتطلبات الفرص وتصنيفها", "ربط المستثمرين بالفرص ومتابعة التفاوض"] },
+      { code: "D", title: "الأنشطة والمتابعات", en: "Activities & Follow-ups", items: ["تسجيل المكالمات والاجتماعات والملاحظات", "مهام وأولويات ومواعيد ومتابعة أداء الفرق", "تنبيهات الاستحقاق والتأخير"] },
+      { code: "E", title: "فريق المبيعات والصلاحيات", en: "Sales Team & Permissions", items: ["حسابات الموظفين والفرق والمشرفين والمندوبين", "تعيين العملاء والفرص وصلاحيات الأدوار", "أهداف المبيعات وأداء الفرق وسجلات التدقيق"] },
+      { code: "F", title: "المصادر والحملات", en: "Lead Sources & Campaign Tracking", items: ["تتبع مصادر العملاء والحملات التسويقية", "قياس الأحجام والتحويل ومقارنة أداء المصادر"] },
+      { code: "G", title: "التقارير والتحليلات", en: "Reports & Analytics", items: ["لوحة إدارة وتقارير العملاء والصفقات والمسار", "أداء الفرق والمتابعات والمهام المتأخرة", "فلاتر بالتاريخ والموظف والفريق والمصدر والحالة"] },
+      { code: "H–J", title: "إشعارات · تكامل · أمان", en: "Notifications · Website Integration · Security", items: ["إشعارات التعيين والمتابعة والتأخير وحالة الفرص", "ربط نماذج الموقع مع قواعد التعيين والتكرار", "صلاحيات الوصول والاختبارات والتوثيق وتدريب المستخدمين الرئيسيين"] },
+    ],
+    en: [
+      { code: "A", title: "Lead Management", en: "Lead Management", items: ["Capture leads from agreed website forms", "Customer, investor, and business-owner records", "Track sources, campaigns, classification, and assignment", "Identify new, uncontacted, and follow-up leads", "Activity history and agreed duplicate reduction"] },
+      { code: "B", title: "Sales Pipeline & Deal Management", en: "Sales Pipeline & Deal Management", items: ["Configure pipeline to SAFQA workflow", "Track qualification, communication, negotiation, completion, and loss", "Manage commercial and investment opportunities", "Monitor open, overdue, completed, and lost deals"] },
+      { code: "C", title: "Investor & Opportunity Management", en: "Investor & Opportunity Management", items: ["Investor and business-owner profiles", "Investment preferences and opportunity requirements", "Link investors to opportunities and track negotiation"] },
+      { code: "D", title: "Activities & Follow-ups", en: "Activities & Follow-ups", items: ["Log calls, meetings, and notes", "Tasks, priorities, deadlines, and team performance", "Due and overdue alerts"] },
+      { code: "E", title: "Sales Team & Permissions", en: "Sales Team & Permissions", items: ["Employee, team, supervisor, and sales accounts", "Assign leads/opportunities and role permissions", "Sales targets, team performance, and audit records"] },
+      { code: "F", title: "Lead Sources & Campaign Tracking", en: "Lead Sources & Campaign Tracking", items: ["Track lead origins and marketing campaigns", "Measure volumes, conversion, and source performance"] },
+      { code: "G", title: "Reports & Analytics", en: "Reports & Analytics", items: ["Management dashboard and lead/deal reports", "Team performance and overdue-task reports", "Filters by date, employee, team, source, and status"] },
+      { code: "H–J", title: "Notifications · Integration · Security", en: "Notifications · Website Integration · Security", items: ["Assignment, follow-up, overdue, and opportunity alerts", "Website form integration with assignment/duplicate rules", "Access control, testing, documentation, and key-user training"] },
+    ],
+  },
+  erpModules: {
+    ar: [
+      { code: "A", title: "CRM والصفقات", en: "CRM & Deals", items: ["التقاط وتصنيف وتعيين ومتابعة العملاء", "المستثمرون ومسارات المبيعات والفرص", "أهداف وأنشطة وتقارير المبيعات"] },
+      { code: "B", title: "التسويق والحملات", en: "Marketing", items: ["الحملات والقنوات والميزانية والمصروفات", "عزو المصادر وتحليل التكلفة وفق البيانات المتاحة", "تقارير الأداء وتنبيهات الميزانية"] },
+      { code: "C", title: "المحاسبة والمالية", en: "Accounting & Finance", items: ["دليل الحسابات والقيود والإيرادات والمصروفات", "الفواتير والذمم والعمولات ومراكز التكلفة", "التدفق والأرباح والخسائر والاعتماد المالي"] },
+      { code: "D", title: "الموارد البشرية", en: "Human Resources", items: ["الموظفون والهيكل والعقود والحضور والإجازات", "الرواتب والبدلات والخصومات والمكافآت والسلف", "الأداء والتقارير وتقييد بيانات الرواتب"] },
+      { code: "E", title: "القانوني والعقود", en: "Legal & Contracts", items: ["القضايا والطلبات وسجلات العقود وانتهاؤها", "المرفقات والمراجعة والتعيين والاعتماد", "تنبيهات الانتهاء وتقييد السجلات الحساسة"] },
+      { code: "F", title: "إدارة المستندات", en: "Documents", items: ["مستودع مركزي وتصنيف وبحث وربط", "صلاحيات العرض والتحميل والتعديل والحذف", "تتبع المراجعات وتنبيهات الانتهاء"] },
+      { code: "G", title: "المهام والموافقات", en: "Tasks & Approvals", items: ["تعيين المهام والمواعيد والأولويات", "مسارات الموافقات وتنبيهات التأخير", "تقارير تنفيذ الأقسام والموظفين"] },
+      { code: "H", title: "المستخدمون والوصول", en: "Access Control", items: ["الحسابات وصلاحيات الأدوار", "تقييد البيانات حسب القسم والفريق", "الاعتماد والتعديل والتصدير والحذف والتدقيق"] },
+      { code: "I", title: "اللوحة التنفيذية", en: "Executive Dashboard", items: ["المبيعات والتسويق والمالية والموارد البشرية", "العقود والمهام والموافقات المعلّقة", "تقارير أداء الأقسام والموظفين"] },
+      { code: "J", title: "الإشعارات والأتمتة", en: "Notifications & Automation", items: ["تنبيهات المتابعة والمهام والموافقات", "انتهاء العقود والمستندات وميزانية الحملات", "أتمتة سير العمل وقواعد التعيين المتفق عليها"] },
+      { code: "K", title: "التكامل بين الوحدات", en: "Cross-Module Integration", items: ["ربط CRM والتسويق والمالية والموارد البشرية", "القانوني والمستندات والمهام والتقارير", "تقليل التكرار وتحسين الرؤية الإدارية"] },
+      { code: "L", title: "الاختبار والقبول والتدريب", en: "Testing & Training", items: ["اختبار المسارات والحسابات والعمولات والصلاحيات", "التحقق من التقارير والتنبيهات وعلاقات البيانات", "التسليم مع توثيق أساسي وتدريب المستخدمين الرئيسيين"] },
+    ],
+    en: [
+      { code: "A", title: "CRM & Deals", en: "CRM & Deals", items: ["Lead capture, classification, assignment, and tracking", "Investors, sales pipelines, and opportunities", "Sales targets, activities, and reports"] },
+      { code: "B", title: "Marketing & Campaigns", en: "Marketing", items: ["Campaigns, channels, budgets, and expenses", "Source attribution and cost analysis from available data", "Performance reports and budget alerts"] },
+      { code: "C", title: "Accounting & Finance", en: "Accounting & Finance", items: ["Chart of accounts, journals, revenue, and expenses", "Invoices, balances, commissions, and cost centers", "Cash flow, P&L, and financial approvals"] },
+      { code: "D", title: "Human Resources", en: "Human Resources", items: ["Employees, org structure, contracts, attendance, and leave", "Salaries, allowances, deductions, bonuses, and advances", "Performance, reports, and restricted salary access"] },
+      { code: "E", title: "Legal & Contracts", en: "Legal & Contracts", items: ["Legal matters, requests, contracts, and expiries", "Attachments, review, assignment, and approval", "Expiry alerts and restricted legal access"] },
+      { code: "F", title: "Document Management", en: "Documents", items: ["Central repository with search and record linking", "View, download, edit, and delete permissions", "Revision tracking and expiry notifications"] },
+      { code: "G", title: "Tasks & Approvals", en: "Tasks & Approvals", items: ["Assign tasks with deadlines and priorities", "Approval workflows and overdue alerts", "Department and employee execution reports"] },
+      { code: "H", title: "Users & Access Control", en: "Access Control", items: ["User accounts and role-based permissions", "Department/team data restrictions", "Approval, edit, export, delete, and audit controls"] },
+      { code: "I", title: "Executive Dashboard", en: "Executive Dashboard", items: ["Sales, marketing, finance, and HR summaries", "Contracts, tasks, and pending approvals", "Department and employee performance reports"] },
+      { code: "J", title: "Notifications & Automation", en: "Notifications & Automation", items: ["Follow-up, task, and approval alerts", "Contract/document expiry and campaign budget alerts", "Agreed workflow automation and assignment rules"] },
+      { code: "K", title: "Cross-Module Integration", en: "Cross-Module Integration", items: ["Connect CRM, marketing, finance, and HR", "Legal, documents, tasks, and reporting", "Reduce duplication and improve visibility"] },
+      { code: "L", title: "Testing, Acceptance & Training", en: "Testing & Training", items: ["Test workflows, calculations, and permissions", "Verify reports, alerts, and data relationships", "Delivery with basic documentation and key-user training"] },
+    ],
+  },
+};
